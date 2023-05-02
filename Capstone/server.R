@@ -40,9 +40,7 @@ shinyServer(function(input, output){
         addMarkers(data=cities_max_bike,lng = ~LNG,lat = ~LAT, popup=~CITY_ASCII)
 
   })
-  output$result <- renderText({
-    paste("You selected", input$city)
-  })
+  
   # If All was selected from dropdown, then render a leaflet map with circle markers
   # and popup weather LABEL for all five cities
   
