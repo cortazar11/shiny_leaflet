@@ -15,6 +15,7 @@ test_weather_data_generation<-function(){
   city_weather_bike_df<-generate_city_weather_bike_data()
   stopifnot(length(city_weather_bike_df)>0)
   print(head(city_weather_bike_df))
+  print(glimpse(city_weather_bike_df))
   return(city_weather_bike_df)
 }
 
@@ -29,17 +30,48 @@ shinyServer(function(input, output){
   
   # Create another data frame called `cities_max_bike` with each row contains city location info and max bike
   # prediction for the city
-  cities_max_bike <- city_weather_bike_df %>% group_by(CITY_ASCII,LNG,LAT) %>% summarize(max_bike_pred=max(BIKE_PREDICTION)) 
+  cities_max_bike <- city_weather_bike_df %>% group_by(CITY_ASCII,LNG,LAT) %>% filter(BIKE_PREDICTION==max(BIKE_PREDICTION)) %>% select(BIKE_PREDICTION,BIKE_PREDICTION_LEVEL,LABEL)
   print(cities_max_bike)
   # Observe drop-down event
-  
-  # Then render output plots with an id defined in ui.R
-  output$city_bike_map <- renderLeaflet({
+  observeEvent(input$city_dropdown, {
+    if(input$city_dropdown == 'All') {
+      #Render the city overview map
+      output$city_bike_map <- renderLeaflet({
         leaflet() %>%
-        addTiles() %>%
-        addMarkers(data=cities_max_bike,lng = ~LNG,lat = ~LAT, popup=~CITY_ASCII)
+          addTiles() %>%
+          addCircleMarkers(data=cities_max_bike,lng = ~LNG,lat = ~LAT, popup=~LABEL, color=~color_levels(BIKE_PREDICTION_LEVEL),radius=~ifelse(BIKE_PREDICTION_LEVEL=="medium",10,6))
 
+      })
+    }
+    else {
+      #Render the specific city map
+      selected_city <- cities_max_bike %>% filter(CITY_ASCII==input$city_dropdown)
+      print(paste("selected_city",selected_city))
+      output$city_bike_map <- renderLeaflet({
+        leaflet() %>%
+          addTiles() %>%
+          addCircleMarkers(data=selected_city,lng = ~LNG,lat = ~LAT, popup=~paste("<b>", cities_max_bike$CITY_ASCII, "</b>"))
+        
+      })
+    } 
+    # Execute code when users make selections on the dropdown 
+    # Then render output plots with an id defined in ui.R
+    # output$city_bike_map <- renderLeaflet({
+    #   leaflet() %>%
+    #     addTiles() %>%
+    #     addCircleMarkers(data=cities_max_bike,lng = ~LNG,lat = ~LAT, popup=~paste("<b>", cities_max_bike$CITY_ASCII, "</b>"), color=~color_levels(BIKE_PREDICTION_LEVEL),radius=~ifelse(BIKE_PREDICTION_LEVEL=="medium",10,6))
+    # 
+    # })
+    # selected_city <- cities_max_bike %>% filter(CITY_ASCII==input$city_dropdown)
+    # print(paste("selected_city",selected_city))
+    # output$city_bike_map <- renderLeaflet({
+    #   leaflet() %>%
+    #     addTiles() %>%
+    #     addCircleMarkers(data=selected_city,lng = ~LNG,lat = ~LAT, popup=~paste("<b>", cities_max_bike$CITY_ASCII, "</b>"), color=~color_levels(BIKE_PREDICTION_LEVEL),radius=~ifelse(BIKE_PREDICTION_LEVEL=="medium",10,6))
+    #   
+    # })
   })
+ 
   
   # If All was selected from dropdown, then render a leaflet map with circle markers
   # and popup weather LABEL for all five cities
