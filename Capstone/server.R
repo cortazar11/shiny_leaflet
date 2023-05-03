@@ -1,4 +1,5 @@
 # Install and import required libraries
+library(htmltools)
 require(shiny)
 require(ggplot2)
 require(leaflet)
@@ -30,8 +31,10 @@ shinyServer(function(input, output){
   
   # Create another data frame called `cities_max_bike` with each row contains city location info and max bike
   # prediction for the city
-  cities_max_bike <- city_weather_bike_df %>% group_by(CITY_ASCII,LNG,LAT) %>% filter(BIKE_PREDICTION==max(BIKE_PREDICTION)) %>% select(BIKE_PREDICTION,BIKE_PREDICTION_LEVEL,LABEL)
+  cities_max_bike <- city_weather_bike_df %>% group_by(CITY_ASCII,LNG,LAT) %>% filter(BIKE_PREDICTION==max(BIKE_PREDICTION)) %>% select(BIKE_PREDICTION,BIKE_PREDICTION_LEVEL,LABEL,DETAILED_LABEL)
   print(cities_max_bike)
+  cities_max_bike$html_code <- lapply(cities_max_bike$LABEL, HTML)
+  cities_max_bike$html_code_detailed <- lapply(cities_max_bike$DETAILED_LABEL, HTML)
   # Observe drop-down event
   observeEvent(input$city_dropdown, {
     if(input$city_dropdown == 'All') {
@@ -39,8 +42,12 @@ shinyServer(function(input, output){
       output$city_bike_map <- renderLeaflet({
         leaflet() %>%
           addTiles() %>%
-          addCircleMarkers(data=cities_max_bike,lng = ~LNG,lat = ~LAT, popup=~LABEL, color=~color_levels(BIKE_PREDICTION_LEVEL),radius=~ifelse(BIKE_PREDICTION_LEVEL=="medium",10,6))
-
+          addCircleMarkers(data=cities_max_bike,lng = ~LNG,lat = ~LAT, 
+                           label=~html_code,
+                           labelOptions = labelOptions(noHide = T),
+                           #popup=~HTML(LABEL), 
+                           color=~color_levels(BIKE_PREDICTION_LEVEL),radius=~ifelse(BIKE_PREDICTION_LEVEL=="medium",10,6))
+        
       })
     }
     else {
@@ -50,7 +57,7 @@ shinyServer(function(input, output){
       output$city_bike_map <- renderLeaflet({
         leaflet() %>%
           addTiles() %>%
-          addCircleMarkers(data=selected_city,lng = ~LNG,lat = ~LAT, popup=~paste("<b>", cities_max_bike$CITY_ASCII, "</b>"))
+          addCircleMarkers(data=selected_city,lng = ~LNG,lat = ~LAT,label=~html_code_detailed, labelOptions = labelOptions(noHide = T))
         
       })
     } 
@@ -71,7 +78,7 @@ shinyServer(function(input, output){
     #   
     # })
   })
- 
+  
   
   # If All was selected from dropdown, then render a leaflet map with circle markers
   # and popup weather LABEL for all five cities
