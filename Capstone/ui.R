@@ -16,7 +16,7 @@ shinyUI(
               # Create a side bar to show detailed plots for a city
               sidebarPanel(
                 # select drop down list to select city
-                selectInput("city_dropdown", "Choose a color:", choices = cities)
-                #textOutput("result")
+                selectInput("city_dropdown", "Choose a color:", choices = cities),
+                plotOutput("temp_line")
               ))
   ))
