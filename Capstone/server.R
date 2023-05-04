@@ -16,12 +16,11 @@ test_weather_data_generation<-function(){
   #Test generate_city_weather_bike_data() function
   city_weather_bike_df<-generate_city_weather_bike_data()
   stopifnot(length(city_weather_bike_df)>0)
-  #print(head(city_weather_bike_df))
-  #print(glimpse(city_weather_bike_df))
   city_weather_bike_df$FORECASTDATETIME <-as.POSIXct(city_weather_bike_df$FORECASTDATETIME, format = "%Y-%m-%d %H:%M:%S")
   city_weather_bike_df$HOUR <- hour(city_weather_bike_df$FORECASTDATETIME)
   city_weather_bike_df$html_code <- lapply(city_weather_bike_df$LABEL, HTML)
   city_weather_bike_df$html_code_detailed <- lapply(city_weather_bike_df$DETAILED_LABEL, HTML)
+  print(city_weather_bike_df$FORECASTDATETIME)
   return(city_weather_bike_df)
 }
 
@@ -72,13 +71,25 @@ shinyServer(function(input, output){
       })
       
       output$temp_line <- renderPlot({
-        
-        ggplot(selected_city,aes(x=HOUR,y=TEMPERATURE)) +
-          geom_point() +
+          ggplot(selected_city,aes(x=FORECASTDATETIME,y=TEMPERATURE)) +
+          geom_point() + 
           geom_line(color="yellow") +
+          scale_x_datetime(date_labels = "%Y-%m-%d %H:%M:%S") +
+          theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
           labs(title = "Trend Line",x="Time (3 hours ahead)",y="TEMPERATURE (C)") +
           # Add labels to each point
           geom_text(aes(label = TEMPERATURE), nudge_y = 0.5)
+      })
+      
+      output$bike_line <- renderPlot({
+          ggplot(selected_city,aes(x=FORECASTDATETIME,y=BIKE_PREDICTION)) +
+              geom_point() +
+              geom_line() +
+              scale_x_datetime(date_labels = "%Y-%m-%d %H:%M:%S") +
+              theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+              labs(title = "Trend Line",x="Time (3 hours ahead)",y="TEMPERATURE (C)") +
+              # Add labels to each point
+              geom_text(aes(label = TEMPERATURE), nudge_y = 0.5)
       })
     } 
     # Execute code when users make selections on the dropdown 
