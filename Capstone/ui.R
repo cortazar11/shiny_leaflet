@@ -17,6 +17,8 @@ shinyUI(
               sidebarPanel(
                 # select drop down list to select city
                 selectInput("city_dropdown", "Choose a color:", choices = cities),
-                plotOutput("temp_line")
+                plotOutput("temp_line"),
+                plotOutput("bike_line", click="plot_click"),
+                verbatimTextOutput("bike_date_output")
               ))
   ))
