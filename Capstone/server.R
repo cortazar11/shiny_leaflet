@@ -71,26 +71,46 @@ shinyServer(function(input, output){
       })
       
       output$temp_line <- renderPlot({
-          ggplot(selected_city,aes(x=FORECASTDATETIME,y=TEMPERATURE)) +
+        ggplot(selected_city,aes(x=FORECASTDATETIME,y=TEMPERATURE)) +
           geom_point() + 
           geom_line(color="yellow") +
           scale_x_datetime(date_labels = "%Y-%m-%d %H:%M:%S") +
-          theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+          #scale_x_datetime(hour(selected_city$FORECASTDATETIME)) +
           labs(title = "Trend Line",x="Time (3 hours ahead)",y="TEMPERATURE (C)") +
           # Add labels to each point
           geom_text(aes(label = TEMPERATURE), nudge_y = 0.5)
       })
       
       output$bike_line <- renderPlot({
-          ggplot(selected_city,aes(x=FORECASTDATETIME,y=BIKE_PREDICTION)) +
-              geom_point() +
-              geom_line() +
-              scale_x_datetime(date_labels = "%Y-%m-%d %H:%M:%S") +
-              theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-              labs(title = "Trend Line",x="Time (3 hours ahead)",y="TEMPERATURE (C)") +
-              # Add labels to each point
-              geom_text(aes(label = TEMPERATURE), nudge_y = 0.5)
+        ggplot(selected_city,aes(x=FORECASTDATETIME,y=BIKE_PREDICTION)) +
+          geom_point() +
+          geom_line() +
+          scale_x_datetime(date_labels = "%Y-%m-%d %H:%M:%S") +
+          #scale_x_datetime(hour(selected_city$FORECASTDATETIME)) +
+          labs(title = "Bike Prediction Line",x="Time (3 hours ahead)",y="BIKE PREDICTION") +
+          # Add labels to each point
+          geom_text(aes(label = BIKE_PREDICTION), nudge_y = 0.5)
       })
+      
+      observeEvent(input$plot_click, {
+        x <- input$plot_click$x
+        y <- input$plot_click$y
+        output$bike_date_output <- renderText(paste("You clicked on Time =", as.POSIXct(x,origin = "1970-01-01"), "and Bike Count Prediction =", y))
+      })
+      
+      output$humidity_pred_chart <- renderPlot({
+        ggplot(selected_city,aes(x=HUMIDITY,y=BIKE_PREDICTION)) +
+          geom_point() +
+          geom_smooth(method ="lm", formula="y ~ poly(x, 4)") +
+          labs(title = "Correlation Plot") 
+          # geom_line() +
+          # scale_x_datetime(date_labels = "%Y-%m-%d %H:%M:%S") +
+          # #scale_x_datetime(hour(selected_city$FORECASTDATETIME)) +
+          # labs(title = "Bike Prediction Line",x="Time (3 hours ahead)",y="BIKE PREDICTION") +
+          # # Add labels to each point
+          # geom_text(aes(label = BIKE_PREDICTION), nudge_y = 0.5)
+      })
+      
     } 
     # Execute code when users make selections on the dropdown 
     # Then render output plots with an id defined in ui.R
