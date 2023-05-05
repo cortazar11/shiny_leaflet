@@ -19,6 +19,7 @@ shinyUI(
                 selectInput("city_dropdown", "Choose a color:", choices = cities),
                 plotOutput("temp_line"),
                 plotOutput("bike_line", click="plot_click"),
-                verbatimTextOutput("bike_date_output")
+                verbatimTextOutput("bike_date_output"),
+                plotOutput("humidity_pred_chart")
               ))
   ))
